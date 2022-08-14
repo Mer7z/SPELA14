@@ -13,10 +13,10 @@
     } elseif($_SESSION['userType'] == 'employee'){
       $sql = "SELECT nombre FROM empleados WHERE correo='$email'";
     }
-    $resul = $mysqli->query($sql);
+    $con = $mysqli->query($sql);
+    $resul = $con->fetch_assoc();
     if($resul>0){
-      $row = $resul->fetch_assoc();
-      $name = $row['nombre'];
+      $name = $resul['nombre'];
     }
   }
 ?>

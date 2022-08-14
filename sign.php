@@ -9,18 +9,20 @@ $direccion = $mysqli->real_escape_string($_POST['address']);
 $telefono = $mysqli->real_escape_string($_POST['phone']);
 
 $sql_email_verify = "SELECT * FROM clientes WHERE correo='$email'";
-$result = $mysqli->query($sql_email_verify);
+$con = $mysqli->query($sql_email_verify);
+$result = $con->fetch_assoc();
 if ($result > 0) {
   header("location: signin.php?email-taken=true");
 } else {
   $sql = "INSERT INTO clientes (nombre, apellido, correo, contraseña, direccion, telefono) VALUES ('$nombre', '$lnombre', '$email', '$password', '$direccion', '$telefono')";
-  $resultado = $mysqli->query($sql);
-
+  $con = $mysqli->query($sql);
+  $resultado = $con->fetch_assoc();
   if ($resultado > 0) {
     $_SESSION['useremail'] = $email;
     $_SESSION['userType'] = 'client';
     header("location: account.php");
   } else {
-    echo 'Ops! Hubo Un problema';
+    echo '<script>alert("Ocurrió un error")</script>';
+    header("location: signin.php");
   }
 }

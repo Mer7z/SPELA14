@@ -16,14 +16,14 @@
     } elseif($_SESSION['userType'] == 'employee'){
       $sql = "SELECT nombre FROM empleados WHERE correo='$email'";
     }
-    $resul = $mysqli->query($sql);
-    if($resul>0){
-      $row = $resul->fetch_assoc();
-      $name = $row['nombre'];
-      if($row['apellido'] != null && $row['telefono'] != null && $row['direccion']){
-        $lname = $row['apellido'];
-        $phone = $row['telefono'];
-        $address = $row['direccion'];
+    $con = $mysqli->query($sql);
+    $result = $con->fetch_assoc();
+    if($result>0){
+      $name = $result['nombre'];
+      if(isset($resul['apellido']) && isset($resul['telefono']) && isset($resul['direccion'])){
+        $lname = $result['apellido'];
+        $phone = $result['telefono'];
+        $address = $result['direccion'];
       }
     }
   } else{

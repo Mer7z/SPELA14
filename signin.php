@@ -5,13 +5,18 @@ if (isset($_SESSION['useremail'])) {
   #Iniciar Sección
   header("location: index.php");
 }
+$email = '';
+$password = '';
+$userType = '';
+
+if(isset($_POST['btnsubmit'])):
 $email = $mysqli->real_escape_string($_POST['email']);
 $password = $mysqli->real_escape_string($_POST['password']);
 $userType = $mysqli->real_escape_string($_POST['user-type']);
 
 $sql_client = "SELECT id, correo, contraseña FROM clientes WHERE correo='$email'";
 $sql_employee = "SELECT id, correo, contraseña FROM empleados WHERE correo='$email'";
-
+endif;
 ?>
 
 <!DOCTYPE html>
@@ -102,8 +107,9 @@ $sql_employee = "SELECT id, correo, contraseña FROM empleados WHERE correo='$em
                 if (!isset($_SESSION['useremail'])) {
                   if ($userType == 'client') {
                     $result = $mysqli->query($sql_client);
-                    if ($result > 0) {
+                    if ($result != null) {
                       $row = $result->fetch_assoc();
+                      if(isset($row['correo'])){
                       if ($row['contraseña'] == $password) {
                         $_SESSION['useremail']= $email;
                         $_SESSION['userType'] = $userType;
@@ -111,13 +117,17 @@ $sql_employee = "SELECT id, correo, contraseña FROM empleados WHERE correo='$em
                       } else {
                         echo "<p class='warning-text'>Contraseña o correo incorrectos</p>";
                       }
+                      } else{
+                        echo "<p class='warning-text'>El Usuario no está registrado</p>";
+                      }
                     } else {
-                      echo "<p class='warning-text'>El Usuario no está registrado</p>";
+                      echo "<p class='warning-text'>Error intente de nuevo</p>";
                     }
                   } elseif ($userType == 'employee') {
                     $result = $mysqli->query($sql_employee);
-                    if ($result > 0) {
+                    if ($result != null) {
                       $row = $result->fetch_assoc();
+                      if(isset($row['correo'])){
                       if ($row['contraseña'] == $password) {
                         #Iniciar Sección
                         $_SESSION['useremail']= $email;
@@ -126,8 +136,11 @@ $sql_employee = "SELECT id, correo, contraseña FROM empleados WHERE correo='$em
                       } else {
                         echo "<p class='warning-text'>Contraseña o correo incorrectos</p>";
                       }
+                      } else{
+                        echo "<p class='warning-text'>El Usuario no está registrado</p>";
+                      }
                     } else {
-                      echo "<p class='warning-text'>El Usuario no está registrado</p>";
+                      echo "<p class='warning-text'>Error intente de nuevo</p>";
                     }
                   }
                 }

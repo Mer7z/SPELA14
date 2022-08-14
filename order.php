@@ -16,14 +16,14 @@
     } elseif($_SESSION['userType'] == 'employee'){
       $sql = "SELECT nombre FROM empleados WHERE correo='$email'";
     }
-    $resul = $mysqli->query($sql);
+    $col = $mysqli->query($sql);
+    $resul = $col->fetch_assoc();
     if($resul>0){
-      $row = $resul->fetch_assoc();
-      $name = $row['nombre'];
-      if(isset($row['apellido']) && isset($row['direccion']) && isset($row['telefono'])){
-        $lname = $row['apellido'];
-        $address = $row['direccion'];
-        $phone = $row['telefono'];
+      $name = $resul['nombre'];
+      if(isset($resul['apellido']) && isset($resul['direccion']) && isset($resul['telefono'])){
+        $lname = $resul['apellido'];
+        $address = $resul['direccion'];
+        $phone = $resul['telefono'];
       }
     }
   }
@@ -84,8 +84,8 @@
         </div>
         <div class="nav-bottom">
           <div class="d-flex flex-row nav-links-container">
-            <a href="index.php" class="nav-link selected">Inicio</a>
-            <a href="order.php" class="nav-link">Pedir</a>
+            <a href="index.php" class="nav-link">Inicio</a>
+            <a href="order.php" class="nav-link selected">Pedir</a>
             <a href="orders.php" class="nav-link <?php if(!$logged){ echo "hidden"; } ?>">
             <?php
                 if($logged && $_SESSION['userType'] == 'client'){

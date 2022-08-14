@@ -16,14 +16,14 @@
     } elseif($_SESSION['userType'] == 'employee'){
       $sql = "SELECT nombre FROM empleados WHERE correo='$email'";
     }
-    $resul = $mysqli->query($sql);
+    $col = $mysqli->query($sql);
+    $resul = $col->fetch_assoc();
     if($resul>0){
-      $row = $resul->fetch_assoc();
-      $name = $row['nombre'];
-      if($row['apellido'] != null && $row['telefono'] != null && $row['direccion']){
-        $lname = $row['apellido'];
-        $phone = $row['telefono'];
-        $address = $row['direccion'];
+      $name = $resul['nombre'];
+      if(isset($resul['apellido']) && isset($resul['telefono']) && isset($resul['direccion'])){
+        $lname = $resul['apellido'];
+        $phone = $resul['telefono'];
+        $address = $resul['direccion'];
       }
     }
   } else{
@@ -35,7 +35,12 @@
   }
 
   if(isset($_POST['edit-account'])){
-    $sql_get_id = "SELECT id FROM clientes WHERE correo='" . $_SESSION['useremail'] . "'";
+    $sql_get_id = '';
+    if($_SESSION['userType'] == 'client'){
+      $sql_get_id = "SELECT id FROM clientes WHERE correo='" . $_SESSION['useremail'] . "'";
+    } elseif($_SESSION['userType'] == 'employee'){
+      $sql_get_id = "SELECT id FROM empleados WHERE correo='" . $_SESSION['useremail'] . "'";
+    }
     $result = $mysqli->query($sql_get_id);
     $row = $result->fetch_assoc();
     if(isset($row['id']))
@@ -48,16 +53,21 @@
     $address = $mysqli->real_escape_string($_POST['address']);
     $phone = $mysqli->real_escape_string($_POST['phone']);
 
-    $sql_update = "UPDATE clientes SET nombre='$name', apellido='$lname', correo='$email', contraseña='$password', direccion='$address', telefono='$phone' WHERE id='$id'";
-    $result_edit = $mysqli->query($sql_update);
-    if($result_edit>0){
+    $sql_update = '';
+    if($_SESSION['userType'] == 'client'){
+      $sql_update = "UPDATE clientes SET nombre='$name', apellido='$lname', correo='$email', contraseña='$password', direccion='$address', telefono='$phone' WHERE id='$id'";
+    } elseif($_SESSION['userType'] == 'employee'){
+      $sql_update = "UPDATE empleados SET nombre='$name', correo='$email', contraseña='$password' WHERE id='$id'";
+    }
+    $con_edit = $mysqli->query($sql_update);
+    if($con_edit){
       $_SESSION['useremail']=$email;
       header("location: account.php");
     } else{
       echo "<script>Ocurrió un Error</script>";
     }
     } else{
-      echo "Ocurrió un Error";
+      echo "<script>Ocurrió un Error</script>";
     }
   }
 ?>
@@ -148,7 +158,7 @@
         </div>
         <div class="col">
           <p class="account-text">Apellido:</p>
-          <input type="text" name="lname" class="account-info" value="<?php echo $lname ?>" required>
+          <input type="text" name="lname" class="account-info" value="<?php echo $lname ?>" <?php if($_SESSION['userType'] == 'client'){echo "required";} ?> >
         </div>
       </div>
       <div class="account-data">
@@ -172,13 +182,13 @@
       </div>
       <div class="account-data">
         <p class="account-text">Dirección:</p>
-        <input class="account-info" type="text" value="<?php echo $address ?>" name="address" required>
+        <input class="account-info" type="text" value="<?php echo $address ?>" name="address" <?php if($_SESSION['userType'] == 'client'){echo "required";} ?>>
       </div>
       <div class="account-data">
         <p class="account-text">Número de Teléfono:</p>
         <div class="d-flex">
           <span class="number-code">+57</span>  
-          <input class="account-info" type="text" value="<?php echo $phone ?>" name="phone" required>
+          <input class="account-info" type="text" value="<?php echo $phone ?>" name="phone" <?php if($_SESSION['userType'] == 'client'){echo "required";} ?>>
         </div>
         <div class="log-out-container row">
           <div class="col">
