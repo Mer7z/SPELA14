@@ -1,6 +1,7 @@
 <?php
 require 'conexion.php';
 session_start();
+if(isset($_POST['btnSubmit'])):
 $nombre = $mysqli->real_escape_string($_POST['name']);
 $lnombre = $mysqli->real_escape_string($_POST['lname']);
 $email = $mysqli->real_escape_string($_POST['email']);
@@ -16,8 +17,7 @@ if ($result > 0) {
 } else {
   $sql = "INSERT INTO clientes (nombre, apellido, correo, contraseña, direccion, telefono) VALUES ('$nombre', '$lnombre', '$email', '$password', '$direccion', '$telefono')";
   $con = $mysqli->query($sql);
-  $resultado = $con->fetch_assoc();
-  if ($resultado > 0) {
+  if ($mysqli) {
     $_SESSION['useremail'] = $email;
     $_SESSION['userType'] = 'client';
     header("location: account.php");
@@ -26,3 +26,7 @@ if ($result > 0) {
     header("location: signin.php");
   }
 }
+
+else:
+  header('location: signin.php');
+endif;

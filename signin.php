@@ -72,7 +72,7 @@ endif;
         <div class="nav-bottom">
           <div class="d-flex flex-row nav-links-container">
             <a href="index.php" class="nav-link">Inicio</a>
-            <a href="#" class="nav-link">Pedir</a>
+            <a href="order.php" class="nav-link">Pedir</a>
             <a href="#" class="nav-link">Comentar</a>
           </div>
         </div>
@@ -155,7 +155,7 @@ endif;
         <div class="sign-up-page">
           <h2>Registrarse</h2>
           <p class="sign-up-text">
-            Registrate para no tener que escribir tu dirección cada vez y
+            Registrate para no tener que escribir tu dirección cada vez hagas un pedido y
             comentar que te a parecido tu experiencia.
           </p>
           <div class="sign-up-form">
@@ -198,7 +198,7 @@ endif;
                   <input type="tel" name="phone" id="phone" required>
                 </div>
               </div>
-              <input type="submit" value="Registrarse" class="log-in-button btn" id="reg-submit-btn">
+              <input type="submit" value="Registrarse" name='btnSubmit' class="log-in-button btn" id="reg-submit-btn">
             </form>
           </div>
         </div>

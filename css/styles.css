@@ -271,6 +271,11 @@ h3{
   padding-right: 0;
 }
 
+.telephone-container h5{
+  display: inline-block;
+  width: max-content;
+}
+
 
 
 @media screen and (max-width: 992px) {

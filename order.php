@@ -7,24 +7,123 @@
   $email = '';
   $address = '';
   $phone = '';
+  $id = '';
   if(isset($_SESSION['useremail'])){
     $email = $_SESSION['useremail'];
     $logged = true;
     $sql = '';
     if($_SESSION['userType'] == 'client'){
-      $sql = "SELECT nombre FROM clientes WHERE correo='$email'";
+      $sql = "SELECT id, nombre, apellido, direccion, telefono FROM clientes WHERE correo='$email'";
     } elseif($_SESSION['userType'] == 'employee'){
       $sql = "SELECT nombre FROM empleados WHERE correo='$email'";
+      header('location: index.php');
     }
     $col = $mysqli->query($sql);
     $resul = $col->fetch_assoc();
     if($resul>0){
       $name = $resul['nombre'];
-      if(isset($resul['apellido']) && isset($resul['direccion']) && isset($resul['telefono'])){
+      if(isset($resul['apellido']) && isset($resul['direccion']) && isset($resul['telefono']) && isset($resul['id'])){
         $lname = $resul['apellido'];
         $address = $resul['direccion'];
         $phone = $resul['telefono'];
+        $id = $resul['id'];
       }
+    }
+  }
+
+  if(isset($_POST['orderSubmit'])){
+    $name_noreg = '';
+    $lname_noreg  = '';
+    $address_noreg = '';
+    $phone_noreg = '';
+    $email_noreg = '';
+
+    if(isset($_POST['orderName']) && isset($_POST['orderLname']) && isset($_POST['orderAddress']) && isset($_POST['orderPhone']) && isset($_POST['orderEmail'])){
+      $name_noreg = $mysqli->real_escape_string($_POST['orderName']);
+      $lname_noreg  = $mysqli->real_escape_string($_POST['orderLname']);
+      $address_noreg = $mysqli->real_escape_string($_POST['orderAddress']);
+      $phone_noreg = $mysqli->real_escape_string($_POST['orderPhone']);
+      $email_noreg = $mysqli->real_escape_string($_POST['orderEmail']);
+    }
+
+    if(!$logged){
+      $sql = "INSERT INTO clientes_no_registrados (nombre, apellido, direccion, telefono, correo) VALUES ('$name_noreg', '$lname_noreg', '$address_noreg', '$phone_noreg', '$email_noreg')";
+      $query = $mysqli->query($sql);
+      if($query){
+        // echo 'Añadido Datos Cliente no registrado';
+      } else{
+        exit("No se pudo agregar los datos");
+      }
+    }
+
+    $products = $_POST['orderProduct'];
+    for ($i=0; $i < count($products); $i++) { 
+      $product_name = "";
+      $info = [];
+      $cant = '';
+      switch ($products[$i]) {
+        case '1':
+          $product_name = "Arepa";
+          $info = ['miel'=>isset($_POST['arepaMiel']), 'lecherita'=>isset($_POST['arepaLeche']), 'mantequilla'=>isset($_POST['arepaManteq'])];
+          $cant = $_POST['arepaCant'];
+          break;
+
+        case '2':
+          $product_name = "Mixta";
+          $info = ['carne'=>isset($_POST['mixtaCarne']), 'pollo'=>isset($_POST['mixtaPollo']), 'jamon'=>isset($_POST['mixtaJamon']), 'salsa'=>isset($_POST['mixtaSalsa'])];
+          $cant = $_POST['mixtaCant'];
+          break;
+
+        case '3':
+          $product_name = "Arepa Hamburgesa";
+          $info = ['especial'=>isset($_POST['aHamEspecial']), 'salsa'=>isset($_POST['aHamSalsa'])];
+          $cant = $_POST['aHamCant'];
+          break;
+
+        case '4':
+          $product_name = "Hamburgesa";
+          $info = ['conCebolla'=>isset($_POST['hamCebolla']), 'salsa'=>isset($_POST['hamSalsa'])];
+          $cant = $_POST['hamCant'];
+          break;
+
+        case '5':
+          $product_name = "Patacón";
+          $info = ['conQueso'=>isset($_POST['pataconQueso'])];
+          $cant = $_POST['pataconCant'];
+          break;
+
+        default:
+          header('location: order.php');
+          break;
+      }
+      $info_sr = serialize($info);
+      if($logged && $_SESSION['userType'] == 'client'){
+        $sql = "INSERT INTO pedidos (producto, info, cantidad, nombre_pedido, apellido_pedido, direccion_pedido, telefono_pedido, correo_pedido, id_cliente) VALUES ('$product_name', '$info_sr', '$cant', '$name', '$lname', '$address', '$phone', '$email', '$id')";
+        $query = $mysqli->query($sql);
+        if($query){
+          header('location: orders.php');
+        } else{
+          exit('No se pudo registrar el pedido');
+        }
+      } else{
+        $sql = "SELECT id FROM clientes_no_registrados WHERE nombre='$name_noreg' AND apellido='$lname_noreg' AND direccion='$address_noreg' AND telefono='$phone_noreg' AND correo='$email_noreg'";
+        $query = $mysqli->query($sql);
+        $assoc = $query->fetch_all();
+        if($assoc>0){
+          print_r($assoc);
+          $last_id = $assoc[count($assoc)-1];
+          $id_no_reg = $last_id[0];
+          $sql = "INSERT INTO pedidos (producto, info, cantidad, nombre_pedido, apellido_pedido, direccion_pedido, telefono_pedido, correo_pedido, id_no_reg) VALUES ('$product_name', '$info_sr', '$cant', '$name_noreg', '$lname_noreg', '$address_noreg', '$phone_noreg', '$email_noreg', '$id_no_reg')";
+          $orderQuery = $mysqli->query($sql);
+          if($orderQuery){
+            header('location: orders.php');
+          } else{
+            exit('No se pudo registrar el pedido');
+          }
+        }
+        
+      }
+
     }
   }
 ?>
@@ -54,12 +153,12 @@
       <div class="nav-container">
         <div class="nav-top d-flex">
           <div class="logo-container">
-            <a href="#">
+            <a href="index.php">
               <img class="logo-image" src="images/arepa.png" alt="">
             </a>
           </div>
           <div class="title">
-            <a href="#"><h1 class="title-text">Arepahamburger la 14</h1></a>
+            <a href="index.php"><h1 class="title-text">Arepahamburger la 14</h1></a>
           </div>
           
           <div class="account-container">
@@ -108,31 +207,39 @@
     <div class="order-title-container">
       <h2>Realize su pedido en línea</h2>
     </div>
+    <form method="post">
     <div class="select-menu-container">
       <p class="select-menu-text">Elija lo que desea pedir:</p>
       <div class="menu-container">
         <div class="row text-center">
           <div class="col-6 col-md food-container">
-            <button class="select-button btn-arepa button-selected"></button>
+            <button type="button" class="select-button btn-arepa"></button>
             <p class="select-text">Arepa</p>
           </div>
           <div class="col-6 col-md food-container">
-            <button class="select-button btn-mixta"></button>
+            <button type="button" class="select-button btn-mixta"></button>
             <p class="select-text">Arepa Mixta</p>
           </div>
           <div class="col-6 col-md food-container">
-            <button class="select-button btn-arepahamburg"></button>
+            <button type="button" class="select-button btn-arepahamburg"></button>
             <p class="select-text">Arepa Hamburgesa</p>
           </div>
           <div class="col-6 col-md food-container">
-            <button class="select-button btn-hamburg"></button>
+            <button type="button" class="select-button btn-hamburg"></button>
             <p class="select-text">Hamburgesa</p>
           </div>
           <div class="col-6 col-md food-container">
-            <button class="select-button btn-patacon"></button>
+            <button type="button" class="select-button btn-patacon"></button>
             <p class="select-text">Patacón</p>
           </div>
         </div>
+      </div>
+      <div id="order-products-input">
+        <input type="hidden" name="orderProduct[]" value="1" required>
+        <input type="hidden" name="orderProduct[]" value="2" disabled="disabled" required>
+        <input type="hidden" name="orderProduct[]" value="3" disabled="disabled" required>
+        <input type="hidden" name="orderProduct[]" value="4" disabled="disabled" required>
+        <input type="hidden" name="orderProduct[]" value="5" disabled="disabled" required>
       </div>
     </div>
     <div class="select-menu-container dark">
@@ -143,66 +250,69 @@
           <div class="col-lg col-md-6 col-12 product-info-container">
             <div class="product-info">
               <p class="product-info-title">Arepa</p>
-              <div class="input-container"><input type="checkbox" checked> <span>Miel</span></div>
-              <div class="input-container"><input type="checkbox" checked> <span>Leche Condensada</span></div>
-              <div class="input-container"><input type="checkbox" checked> <span>Mantequilla</span></div>
-              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1"></div>
+              <div class="input-container"><input type="checkbox" name="arepaMiel" checked> <span>Miel</span></div>
+              <div class="input-container"><input type="checkbox" name="arepaLeche" checked> <span>Leche Condensada</span></div>
+              <div class="input-container"><input type="checkbox" name="arepaManteq" checked> <span>Mantequilla</span></div>
+              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1" name="arepaCant" required></div>
             </div>
           </div>
           <div class="col-lg col-md-6 col-12 product-info-container">
             <div class="product-info">
               <p class="product-info-title">Arepa Mixta</p>
-              <div class="input-container"><input type="checkbox" checked> <span>Carne</span></div>
-              <div class="input-container"><input type="checkbox" checked> <span>Pollo</span></div>
-              <div class="input-container"><input type="checkbox" checked> <span>Jamón</span></div>
-              <div class="input-container"><input type="checkbox" checked> <span>Salsas</span></div>
-              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1"></div>
+              <div class="input-container"><input type="checkbox" name="mixtaCarne" checked> <span>Carne</span></div>
+              <div class="input-container"><input type="checkbox" name="mixtaPollo" checked> <span>Pollo</span></div>
+              <div class="input-container"><input type="checkbox" name="mixtaJamon" checked> <span>Jamón</span></div>
+              <div class="input-container"><input type="checkbox" name="mixtaSalsa" checked> <span>Salsas</span></div>
+              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1" name="mixtaCant" required></div>
             </div>
           </div>
           <div class="col-lg col-md-6 col-12 product-info-container">
             <div class="product-info">
               <p class="product-info-title">Arepa Hamburgesa</p>
-              <div class="input-container"><input type="checkbox" > <span>Especial</span></div>
-              <div class="input-container"><input type="checkbox" checked> <span>Salsas</span></div>
-              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1"></div>
+              <div class="input-container"><input type="checkbox" name="aHamEspecial" > <span>Especial</span></div>
+              <div class="input-container"><input type="checkbox" name="aHamSalsa" checked> <span>Salsas</span></div>
+              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1" name="aHamCant" required></div>
             </div>
           </div>
           <div class="col-lg col-md-6 col-12 product-info-container">
             <div class="product-info">
               <p class="product-info-title">Hamburgesa</p>
-              <div class="input-container"><input type="checkbox" checked> <span>Con cebolla</span></div>
-              <div class="input-container"><input type="checkbox" checked> <span>Salsas</span></div>
-              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1"></div>
+              <div class="input-container"><input type="checkbox" name="hamCebolla" checked> <span>Con cebolla</span></div>
+              <div class="input-container"><input type="checkbox" name="hamSalsa" checked> <span>Salsas</span></div>
+              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1" name="hamCant" required></div>
             </div>
           </div>
           <div class="col-lg col-md-12 col-12 product-info-container">
             <div class="product-info">
               <p class="product-info-title">Patacón</p>
-              <div class="input-container"><input type="checkbox" checked> <span>Con Queso</span></div>
-              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1"></div>
+              <div class="input-container"><input type="checkbox" name="pataconQueso" checked> <span>Con Queso</span></div>
+              <div class="input-container"><span>Cantidad: </span> <input type="number" min="1" max="100" value="1" name="pataconCant" required></div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="select-menu-container">
+    <?php
+    if(!$logged):
+    echo
+      '<div class="select-menu-container">
       <p class="select-menu-text">Dónde quiere entregar su pedido:<br><span>(Solo pedidos a Caicedonia)</span></p>
       <div class="menu-container">
         <div class="person-info">
           <div class="input-container names-input row">
             <div class="input-flex name-input-container col-md-6">
               <span>Nombre:</span>
-              <input type="text">
+              <input type="text" name="orderName" required>
             </div>
             <div class="input-flex lname-input-container col-md-6">
               <span>Apellidos:</span>
-              <input type="text">
+              <input type="text" name="orderLname" required>
             </div>
           </div>
           <div class="input-container">
             <div class="input-flex">
               <span>Dirección:</span>
-              <input type="text" placeholder="Carrera o Calle xy #12-34">
+              <input type="text" name="orderAddress" placeholder="Carrera o Calle xy #12-34" required>
             </div>
           </div>
           <div class="input-container">
@@ -210,22 +320,65 @@
               <span>Número de Teléfono:</span>
               <div class="telephone-container">
                 <span>+57</span>
-                <input type="tel">
+                <input type="tel" name="orderPhone" required>
               </div>
             </div>
           </div>
           <div class="input-container">
             <div class="input-flex">
               <span>Correo Electronico:</span>
-              <input type="email" placeholder="usuario@ejemplo.com">
+              <input type="email" name="orderEmail" placeholder="usuario@ejemplo.com" required>
             </div>
           </div>
         </div>
         <div class="btn-container">
-          <button class="order-button-product btn" id="order-page-submit">Solicitar Pedido</button>
+          <button type="submit" name="orderSubmit" class="order-button-product btn" id="order-page-submit">Solicitar Pedido</button>
         </div>
       </div>
-    </div>
+    </div>';
+
+    elseif ($logged && $_SESSION['userType'] == 'client'):
+      echo
+      '<div class="select-menu-container">
+      <p class="select-menu-text">Tus Datos:<br><span>(Solo pedidos a Caicedonia)</span></p>
+      <div class="menu-container">
+        <div class="person-info">
+          <div class="input-container names-input row">
+            <div class="input-flex name-input-container col-md-6">
+              <span>Nombre:</span>
+              <h4>' . $name . '</h4>
+            </div>
+            <div class="input-flex lname-input-container col-md-6">
+              <span>Apellidos:</span>
+              <h4>' . $lname . '</h4>
+            </div>
+          </div>
+          <div class="input-container">
+            <div class="input-flex">
+              <span>Dirección:</span>
+              <h4>' . $address . '</h4>
+            </div>
+          </div>
+          <div class="input-container">
+            <div class="input-flex">
+              <span>Número de Teléfono:</span>
+              <div class="telephone-container">
+                <h5>+57</h5>
+                <h5>' . $phone . '</h5>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        <div class="btn-container">
+          <button type="submit" name="orderSubmit" class="order-button-product btn" id="order-page-submit">Solicitar Pedido</button>
+        </div>
+      </div>
+    </div>';
+
+    endif;
+    ?>
+    </form>
   </div>
   <!-- Footer -->
   <div id="footer">

@@ -20,7 +20,7 @@
     $result = $con->fetch_assoc();
     if($result>0){
       $name = $result['nombre'];
-      if(isset($resul['apellido']) && isset($resul['telefono']) && isset($resul['direccion'])){
+      if(isset($result['apellido']) && isset($result['telefono']) && isset($result['direccion'])){
         $lname = $result['apellido'];
         $phone = $result['telefono'];
         $address = $result['direccion'];

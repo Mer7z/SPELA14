@@ -172,7 +172,7 @@
             <input class="account-info" type="password" name="password1" id="password1" onblur="savePass()" oninput="checkPassLength()" required>
           </div>
           <div class="col">
-            <p class="account-text">Confirma Contraseña:</p>
+            <p class="account-text">Confirmar Contraseña:</p>
             <input class="account-info" type="password" name="password2" id="password2" oninput="checkPassword()" required>
           </div>
         </div>
@@ -197,7 +197,7 @@
         </form>
           <div class="col">
           <form method="post">
-            <button type=submit" name="cancel-edit" class="btn cancel-button">Cancel</button>
+            <button type=submit" name="cancel-edit" class="btn cancel-button">Cancelar</button>
           </form>            
           </div>
         </div>
