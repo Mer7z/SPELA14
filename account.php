@@ -7,9 +7,39 @@
   $email = '';
   $phone = '';
   $address = '';
+  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+    $cookie = $_COOKIE['userEmail'];
+    $pw = $_COOKIE['pw'];
+    $cookie_id = $_COOKIE['id'];
+    
+    $_SESSION['useremail'] = $_COOKIE['userEmail'];
+    $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $query = $mysqli->query($sql_client);
+    $result = $query->fetch_assoc();
+    if($result>0){
+      $_SESSION['userType'] = 'client';
+    } else{
+      $query = $mysqli->query($sql_employee);
+      $result = $query->fetch_assoc();
+      if($result>0){
+        $_SESSION['userType'] = 'employee';
+      } else{
+        session_destroy();
+      }
+    }
+
+    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+    setcookie('pw', $pw, time() + (86400 * 30), "/");
+    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  }
   if(isset($_SESSION['useremail'])){
     $email = $_SESSION['useremail'];
     $logged = true;
+    if(isset($_COOKIE['noreg-id'])){
+      unset($_COOKIE['noreg-id']);
+      setcookie('noreg-id', null, -1, '/');
+    }
     $sql = '';
     if($_SESSION['userType'] == 'client'){
       $sql = "SELECT nombre, apellido, direccion, telefono FROM clientes WHERE correo='$email'";
@@ -32,6 +62,14 @@
 
   if(isset($_POST['btncerrar'])){
     session_destroy();
+    if(isset($_COOKIE['userEmail']) && isset($_COOKIE['id']) && isset($_COOKIE['pw'])){
+      unset($_COOKIE['userEmail']);
+      unset($_COOKIE['id']);
+      unset($_COOKIE['pw']);
+      setcookie('userEmail', null, -1, '/');
+      setcookie('id', null, -1, '/');
+      setcookie('pw', null, -1, '/');
+    }
     header("location: signin.php");
   }
   if(isset($_POST['btneditar'])){

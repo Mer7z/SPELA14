@@ -17,14 +17,24 @@ if ($result > 0) {
 } else {
   $sql = "INSERT INTO clientes (nombre, apellido, correo, contraseña, direccion, telefono) VALUES ('$nombre', '$lnombre', '$email', '$password', '$direccion', '$telefono')";
   $con = $mysqli->query($sql);
-  if ($mysqli) {
-    $_SESSION['useremail'] = $email;
-    $_SESSION['userType'] = 'client';
-    header("location: account.php");
-  } else {
-    echo '<script>alert("Ocurrió un error")</script>';
-    header("location: signin.php");
-  }
+    if ($mysqli) {
+      $_SESSION['useremail'] = $email;
+      $_SESSION['userType'] = 'client';
+      $sql = "SELECT id FROM clientes WHERE correo='$email'";
+      $query = $mysqli->query($sql);
+      $result = $query->fetch_assoc();
+      $id = '';
+      if (isset($result['id'])) {
+        $id = $result['id'];
+      }
+      setcookie('userEmail', $email, time() + (86400 * 30), "/");
+      setcookie('pw', $password, time() + (86400 * 30), "/");
+      setcookie('id', $id, time() + (86400 * 30), "/");
+      header("location: account.php");
+    } else {
+      echo '<script>alert("Ocurrió un error")</script>';
+      header("location: signin.php");
+    }
 }
 
 else:

@@ -1,6 +1,32 @@
 <?php
 require 'conexion.php';
 session_start();
+if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+  $cookie = $_COOKIE['userEmail'];
+  $pw = $_COOKIE['pw'];
+  $cookie_id = $_COOKIE['id'];
+  
+  $_SESSION['useremail'] = $_COOKIE['userEmail'];
+  $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+  $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+  $query = $mysqli->query($sql_client);
+  $result = $query->fetch_assoc();
+  if($result>0){
+    $_SESSION['userType'] = 'client';
+  } else{
+    $query = $mysqli->query($sql_employee);
+    $result = $query->fetch_assoc();
+    if($result>0){
+      $_SESSION['userType'] = 'employee';
+    } else{
+      session_destroy();
+    }
+  }
+
+  setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+  setcookie('pw', $pw, time() + (86400 * 30), "/");
+  setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+}
 if (isset($_SESSION['useremail'])) {
   #Iniciar Sección
   header("location: index.php");
@@ -58,10 +84,7 @@ endif;
           </div>
 
           <div class="account-container">
-            <!-- <a href="#" class="sign-in">
-                <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Iniciar Sección</span>
-              </a> -->
+            
             <a href="#" class="toggle-button">
               <span class="bar"></span>
               <span class="bar"></span>
@@ -73,6 +96,19 @@ endif;
           <div class="d-flex flex-row nav-links-container">
             <a href="index.php" class="nav-link">Inicio</a>
             <a href="order.php" class="nav-link">Pedir</a>
+            <a href="orders.php" class="nav-link <?php if(!isset($_COOKIE['noreg-id'])){ echo "hidden"; } ?>">
+            <?php
+                if(isset($logged)){
+                if($logged && $_SESSION['userType'] == 'client'){
+                  echo "Tus Pedidos";
+                } elseif($logged && $_SESSION['userType'] == 'employee'){
+                  echo "Pedidos";
+                }
+              } else{
+                echo "Tus Pedidos";
+              }
+              ?>
+            </a>
             <a href="#" class="nav-link">Comentar</a>
           </div>
         </div>
@@ -113,6 +149,17 @@ endif;
                       if ($row['contraseña'] == $password) {
                         $_SESSION['useremail']= $email;
                         $_SESSION['userType'] = $userType;
+                          $sql = "SELECT id FROM clientes WHERE correo='$email'";
+                          $query = $mysqli->query($sql);
+                          $result = $query->fetch_assoc();
+                          $id = '';
+                          if (isset($result['id'])) {
+                            $id = $result['id'];
+                          }
+                          setcookie('userEmail', $email, time() + (86400 * 30), "/");
+                          setcookie('pw', $password, time() + (86400 * 30), "/");
+                          setcookie('id', $id, time() + (86400 * 30), "/");
+                        
                         header("location: index.php");
                       } else {
                         echo "<p class='warning-text'>Contraseña o correo incorrectos</p>";
@@ -132,6 +179,20 @@ endif;
                         #Iniciar Sección
                         $_SESSION['useremail']= $email;
                         $_SESSION['userType'] = $userType;
+                          $sql = "SELECT id FROM empleados WHERE correo='$email'";
+                          $query = $mysqli->query($sql);
+                          $result = $query->fetch_assoc();
+                          $id = '';
+                          if (isset($result['id'])) {
+                            $id = $result['id'];
+                          }
+                          setcookie('userEmail',
+                            $email,
+                            time() + (86400 * 30),
+                            "/"
+                          );
+                          setcookie('pw', $password, time() + (86400 * 30), "/");
+                          setcookie('id', $id, time() + (86400 * 30), "/");
                         header("location: index.php");
                       } else {
                         echo "<p class='warning-text'>Contraseña o correo incorrectos</p>";
@@ -162,25 +223,25 @@ endif;
             <form action="sign.php" method="post">
               <div class="row">
                 <div class="input-flex col">
-                  <label for="name">Nombre:</label>
+                  <label class="account-text" for="name">Nombre:</label>
                   <input type="text" name="name" placeholder="Ingrese su nombre"  required/>
                 </div>
                 <div class="input-flex col">
-                  <label for="lname">Apellido:</label>
+                  <label class="account-text" for="lname">Apellido:</label>
                   <input type="text" name="lname" placeholder="Ingrese su Apellido" required/>
                 </div>
               </div>
               <div class="input-flex">
-                <label for="email">Correo Electrónico</label>
+                <label class="account-text" for="email">Correo Electrónico</label>
                 <input type="email" name="email" placeholder="nombre@ejemplo.com" required>
               </div>
               <div class="row">
                 <div class="input-flex col">
-                  <label for="password1">Contraseña:</label>
+                  <label class="account-text" for="password1">Contraseña:</label>
                   <input type="password" id="password1" name="password1" onblur="savePass()" oninput="checkPassLength()" required>
                 </div>
                 <div class="input-flex col">
-                  <label for="password2">Confirmar contraseña:</label>
+                  <label class="account-text" for="password2">Confirmar contraseña:</label>
                   <input type="password" name="password2" id="password2" oninput="checkPassword()" required>
                 </div>
               </div>
@@ -188,11 +249,11 @@ endif;
                 <p class="warning-text" id="password-warning"></p>
               </div>
               <div class="input-flex">
-                <label for="address">Dirección:</label>
-                <input type="text" name="address" id="address" placeholder="Igrese su dirección de domicilio" required>
+                <label class="account-text" for="address">Dirección:</label>
+                <input type="text" name="address" id="address" placeholder="Ingrese su dirección de domicilio" required>
               </div>
               <div class="input-flex">
-                <label for="phone">Número de teléfono:</label>
+                <label class="account-text" for="phone">Número de teléfono:</label>
                 <div>
                   <span>+57</span>
                   <input type="tel" name="phone" id="phone" required>

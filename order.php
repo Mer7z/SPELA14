@@ -8,9 +8,39 @@
   $address = '';
   $phone = '';
   $id = '';
+  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+    $cookie = $_COOKIE['userEmail'];
+    $pw = $_COOKIE['pw'];
+    $cookie_id = $_COOKIE['id'];
+    
+    $_SESSION['useremail'] = $_COOKIE['userEmail'];
+    $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $query = $mysqli->query($sql_client);
+    $result = $query->fetch_assoc();
+    if($result>0){
+      $_SESSION['userType'] = 'client';
+    } else{
+      $query = $mysqli->query($sql_employee);
+      $result = $query->fetch_assoc();
+      if($result>0){
+        $_SESSION['userType'] = 'employee';
+      } else{
+        session_destroy();
+      }
+    }
+
+    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+    setcookie('pw', $pw, time() + (86400 * 30), "/");
+    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  }
   if(isset($_SESSION['useremail'])){
     $email = $_SESSION['useremail'];
     $logged = true;
+    if(isset($_COOKIE['noreg-id'])){
+      unset($_COOKIE['noreg-id']);
+      setcookie('noreg-id', null, -1, '/');
+    }
     $sql = '';
     if($_SESSION['userType'] == 'client'){
       $sql = "SELECT id, nombre, apellido, direccion, telefono FROM clientes WHERE correo='$email'";
@@ -32,6 +62,28 @@
   }
 
   if(isset($_POST['orderSubmit'])){
+    $ordered = 0;
+    if(isset($_COOKIE['noreg-id'])){
+      $cookie = $_COOKIE['noreg-id'];
+      $sql = "SELECT ordenado FROM clientes_no_registrados WHERE id='$cookie'";
+      $query = $mysqli->query($sql);
+      $resul = $query->fetch_assoc();
+      if($resul>0){
+        $ordered = $resul['ordenado'];
+      } else{
+        unset($_COOKIE['noreg-id']);
+        setcookie('noreg-id', null, -1, '/');
+      }
+    } elseif($logged && $_SESSION['userType'] == 'client'){
+      $sql = "SELECT ordenado FROM clientes WHERE id='$id'";
+      $query = $mysqli->query($sql);
+      $resul = $query->fetch_assoc();
+      if($resul>0){
+        $ordered = $resul['ordenado'];
+      }
+    }
+    
+    if($ordered != 1):
     $name_noreg = '';
     $lname_noreg  = '';
     $address_noreg = '';
@@ -47,6 +99,7 @@
     }
 
     if(!$logged){
+      if(!isset($_COOKIE['noreg-id'])){
       $sql = "INSERT INTO clientes_no_registrados (nombre, apellido, direccion, telefono, correo) VALUES ('$name_noreg', '$lname_noreg', '$address_noreg', '$phone_noreg', '$email_noreg')";
       $query = $mysqli->query($sql);
       if($query){
@@ -54,6 +107,7 @@
       } else{
         exit("No se pudo agregar los datos");
       }
+    }
     }
 
     $products = $_POST['orderProduct'];
@@ -101,6 +155,8 @@
         $sql = "INSERT INTO pedidos (producto, info, cantidad, nombre_pedido, apellido_pedido, direccion_pedido, telefono_pedido, correo_pedido, id_cliente) VALUES ('$product_name', '$info_sr', '$cant', '$name', '$lname', '$address', '$phone', '$email', '$id')";
         $query = $mysqli->query($sql);
         if($query){
+          $orderSql = "UPDATE clientes SET ordenado=1 WHERE id='$id'";
+          $updateQuery = $mysqli->query($orderSql);
           header('location: orders.php');
         } else{
           exit('No se pudo registrar el pedido');
@@ -110,12 +166,23 @@
         $query = $mysqli->query($sql);
         $assoc = $query->fetch_all();
         if($assoc>0){
-          print_r($assoc);
-          $last_id = $assoc[count($assoc)-1];
-          $id_no_reg = $last_id[0];
+          if(isset($assoc[count($assoc)-1])){
+            $last_id = $assoc[count($assoc)-1];
+            $id_no_reg = $last_id[0];
+          } else{
+            header('location: order.php');
+          }
+          if(!isset($_COOKIE['noreg-id'])){
+            setcookie('noreg-id', $id_no_reg, time() + (60 * 60), '/');
+          } else{
+            $id_no_reg = $_COOKIE['noreg-id'];
+          }
+
           $sql = "INSERT INTO pedidos (producto, info, cantidad, nombre_pedido, apellido_pedido, direccion_pedido, telefono_pedido, correo_pedido, id_no_reg) VALUES ('$product_name', '$info_sr', '$cant', '$name_noreg', '$lname_noreg', '$address_noreg', '$phone_noreg', '$email_noreg', '$id_no_reg')";
           $orderQuery = $mysqli->query($sql);
           if($orderQuery){
+            $orderSql = "UPDATE clientes_no_registrados SET ordenado=1 WHERE id='$id_no_reg'";
+            $updateQuery = $mysqli->query($orderSql);
             header('location: orders.php');
           } else{
             exit('No se pudo registrar el pedido');
@@ -125,6 +192,9 @@
       }
 
     }
+  else:
+    echo '<script>alert("Ya ordenaste un pedido! Espera a que te lo envíen.")</script>';
+  endif;
   }
 ?>
 
@@ -185,9 +255,9 @@
           <div class="d-flex flex-row nav-links-container">
             <a href="index.php" class="nav-link">Inicio</a>
             <a href="order.php" class="nav-link selected">Pedir</a>
-            <a href="orders.php" class="nav-link <?php if(!$logged){ echo "hidden"; } ?>">
+            <a href="orders.php" class="nav-link <?php if(!$logged && !isset($_COOKIE['noreg-id'])){ echo "hidden"; } ?>">
             <?php
-                if($logged && $_SESSION['userType'] == 'client'){
+                if($logged && $_SESSION['userType'] == 'client' || isset($_COOKIE['noreg-id'])){
                   echo "Tus Pedidos";
                 } elseif($logged && $_SESSION['userType'] == 'employee'){
                   echo "Pedidos";
@@ -413,7 +483,8 @@
 
   <!-- JavaScript Bundle with Popper -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script></body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
   <script src="js/index.js"></script>
+</body>
   <script src="js/order.js"></script>
 </html>

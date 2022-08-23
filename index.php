@@ -4,9 +4,39 @@
   $logged = false;
   $name = '';
   $email = '';
+  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+    $cookie = $_COOKIE['userEmail'];
+    $pw = $_COOKIE['pw'];
+    $cookie_id = $_COOKIE['id'];
+    
+    $_SESSION['useremail'] = $_COOKIE['userEmail'];
+    $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $query = $mysqli->query($sql_client);
+    $result = $query->fetch_assoc();
+    if($result>0){
+      $_SESSION['userType'] = 'client';
+    } else{
+      $query = $mysqli->query($sql_employee);
+      $result = $query->fetch_assoc();
+      if($result>0){
+        $_SESSION['userType'] = 'employee';
+      } else{
+        session_destroy();
+      }
+    }
+
+    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+    setcookie('pw', $pw, time() + (86400 * 30), "/");
+    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  }
   if(isset($_SESSION['useremail'])){
     $email = $_SESSION['useremail'];
     $logged = true;
+    if(isset($_COOKIE['noreg-id'])){
+      unset($_COOKIE['noreg-id']);
+      setcookie('noreg-id', null, -1, '/');
+    }
     $sql = '';
     if($_SESSION['userType'] == 'client'){
       $sql = "SELECT nombre FROM clientes WHERE correo='$email'";
@@ -78,9 +108,9 @@
           <div class="d-flex flex-row nav-links-container">
             <a href="index.php" class="nav-link selected">Inicio</a>
             <a href="order.php" class="nav-link">Pedir</a>
-            <a href="orders.php" class="nav-link <?php if(!$logged){ echo "hidden"; } ?>">
+            <a href="orders.php" class="nav-link <?php if(!$logged && !isset($_COOKIE['noreg-id'])){ echo "hidden"; } ?>">
             <?php
-                if($logged && $_SESSION['userType'] == 'client'){
+                if($logged && $_SESSION['userType'] == 'client' || isset($_COOKIE['noreg-id'])){
                   echo "Tus Pedidos";
                 } elseif($logged && $_SESSION['userType'] == 'employee'){
                   echo "Pedidos";

@@ -7,9 +7,39 @@
   $email = '';
   $phone = '';
   $address = '';
+  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+    $cookie = $_COOKIE['userEmail'];
+    $pw = $_COOKIE['pw'];
+    $cookie_id = $_COOKIE['id'];
+    
+    $_SESSION['useremail'] = $_COOKIE['userEmail'];
+    $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    $query = $mysqli->query($sql_client);
+    $result = $query->fetch_assoc();
+    if($result>0){
+      $_SESSION['userType'] = 'client';
+    } else{
+      $query = $mysqli->query($sql_employee);
+      $result = $query->fetch_assoc();
+      if($result>0){
+        $_SESSION['userType'] = 'employee';
+      } else{
+        session_destroy();
+      }
+    }
+
+    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+    setcookie('pw', $pw, time() + (86400 * 30), "/");
+    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  }
   if(isset($_SESSION['useremail'])){
     $email = $_SESSION['useremail'];
     $logged = true;
+    if(isset($_COOKIE['noreg-id'])){
+      unset($_COOKIE['noreg-id']);
+      setcookie('noreg-id', null, -1, '/');
+    }
     $sql = '';
     if($_SESSION['userType'] == 'client'){
       $sql = "SELECT nombre, apellido, direccion, telefono FROM clientes WHERE correo='$email'";
@@ -167,12 +197,12 @@
       </div>
       <div class="account-data">
         <div class="row">
-          <div class="col">
+          <div class="col-md col-sm-12">
             <p class="account-text">Nueva contraseña:</p>
             <input class="account-info" type="password" name="password1" id="password1" onblur="savePass()" oninput="checkPassLength()" required>
           </div>
-          <div class="col">
-            <p class="account-text">Confirmar Contraseña:</p>
+          <div class="col-md col-sm-12">
+            <p class="account-text">Confirmar contraseña:</p>
             <input class="account-info" type="password" name="password2" id="password2" oninput="checkPassword()" required>
           </div>
         </div>
