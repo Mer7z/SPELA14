@@ -29,9 +29,11 @@ if ($result > 0) {
       if (isset($result['id'])) {
         $id = $result['id'];
       }
+      $type = password_hash('client', PASSWORD_DEFAULT);
       setcookie('userEmail', $email, time() + (86400 * 30), "/");
       setcookie('token', $hash, time() + (86400 * 30), "/");
       setcookie('id', $id, time() + (86400 * 30), "/");
+      setcookie('type', $type, time() + (86400 * 30), "/");
       header("location: account.php");
     } else {
       echo '<script>alert("Ocurrió un error")</script>';

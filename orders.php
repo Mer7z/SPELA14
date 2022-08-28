@@ -10,30 +10,33 @@ $address = '';
 $phone = '';
 $id = '';
 $resultOrders;
-if(isset($_COOKIE['userEmail']) && isset($_COOKIE['token']) && isset($_COOKIE['id'])){
+if(isset($_COOKIE['userEmail']) && isset($_COOKIE['token']) && isset($_COOKIE['id']) && isset($_COOKIE['type'])){
   $cookie = $_COOKIE['userEmail'];
   $hash = $_COOKIE['token'];
   $cookie_id = $_COOKIE['id'];
+  $type = $_COOKIE['type'];
   
   
   $sql_client = "SELECT contraseña FROM clientes WHERE correo='$cookie' AND id='$cookie_id'";
   $sql_employee = "SELECT contraseña FROM empleados WHERE correo='$cookie' AND id='$cookie_id'";
-  $query = $mysqli->query($sql_client);
-  $result = $query->fetch_assoc();
-  if($result>0){
-    if($result['contraseña']==$hash){
-      $_SESSION['userType'] = 'client';
-      $_SESSION['useremail'] = $_COOKIE['userEmail'];
-      $_SESSION['verified'] = true;
-    } else{
-      session_destroy();
-    }
-  } else{
-    $query = $mysqli->query($sql_employee);
+  if(password_verify('client', $type)){
+    $query = $mysqli->query($sql_client);
     $result = $query->fetch_assoc();
     if($result>0){
       if($result['contraseña']==$hash){
         $_SESSION['userType'] = 'client';
+        $_SESSION['useremail'] = $_COOKIE['userEmail'];
+        $_SESSION['verified'] = true;
+      } else{
+        session_destroy();
+      }
+    }
+  } elseif(password_verify('employee', $type)){
+    $query = $mysqli->query($sql_employee);
+    $result = $query->fetch_assoc();
+    if($result>0){
+      if($result['contraseña']==$hash){
+        $_SESSION['userType'] = 'employee';
         $_SESSION['useremail'] = $_COOKIE['userEmail'];
         $_SESSION['verified'] = true;
       } else{
@@ -51,6 +54,7 @@ if (isset($_SESSION['useremail']) && isset($_SESSION['verified'])) {
   setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
   setcookie('token', $hash, time() + (86400 * 30), "/");
   setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  setcookie('type', $type, time() + (86400 * 30), "/");
   $email = $_SESSION['useremail'];
   $logged = true;
   if (isset($_COOKIE['noreg-id'])) {
