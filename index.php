@@ -4,33 +4,47 @@
   $logged = false;
   $name = '';
   $email = '';
-  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['token']) && isset($_COOKIE['id'])){
     $cookie = $_COOKIE['userEmail'];
-    $pw = $_COOKIE['pw'];
+    $hash = $_COOKIE['token'];
     $cookie_id = $_COOKIE['id'];
     
-    $_SESSION['useremail'] = $_COOKIE['userEmail'];
-    $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
-    $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    
+    $sql_client = "SELECT contraseña FROM clientes WHERE correo='$cookie' AND id='$cookie_id'";
+    $sql_employee = "SELECT contraseña FROM empleados WHERE correo='$cookie' AND id='$cookie_id'";
     $query = $mysqli->query($sql_client);
     $result = $query->fetch_assoc();
     if($result>0){
-      $_SESSION['userType'] = 'client';
+      if($result['contraseña']==$hash){
+        $_SESSION['userType'] = 'client';
+        $_SESSION['useremail'] = $_COOKIE['userEmail'];
+        $_SESSION['verified'] = true;
+      } else{
+        session_destroy();
+      }
     } else{
       $query = $mysqli->query($sql_employee);
       $result = $query->fetch_assoc();
       if($result>0){
-        $_SESSION['userType'] = 'employee';
+        if($result['contraseña']==$hash){
+          $_SESSION['userType'] = 'client';
+          $_SESSION['useremail'] = $_COOKIE['userEmail'];
+          $_SESSION['verified'] = true;
+        } else{
+          session_destroy();
+        }
       } else{
         session_destroy();
       }
     }
-
-    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
-    setcookie('pw', $pw, time() + (86400 * 30), "/");
-    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  
+    
   }
-  if(isset($_SESSION['useremail'])){
+  if (isset($_SESSION['useremail']) && isset($_SESSION['verified'])) {
+    #Iniciar Sección
+    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+    setcookie('token', $hash, time() + (86400 * 30), "/");
+    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
     $email = $_SESSION['useremail'];
     $logged = true;
     if(isset($_COOKIE['noreg-id'])){
@@ -187,7 +201,7 @@
         </div>
         <div class="copyright">
           <i class="fa-solid fa-copyright"></i>
-          <span>Manuel Esteban Ramírez Umaña - 2022</span>
+          <span>Manuel Esteban Ramírez Umaña - 2022<br>Logo by <a href="https://www.flaticon.com" target="_blank">Flaticon</a></span>
         </div>
       </div>
     </div>

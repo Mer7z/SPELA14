@@ -1,0 +1,95 @@
+body{
+  
+}
+#admin-panel{
+  background-color: white;
+  width: 50%;
+  margin: auto auto;
+  padding: 2% 5%;
+}
+#admin-login{
+  margin: 0 auto;
+  background-color: white;
+  color: black;
+  padding: 20px 40px;
+  width: 300px;
+  height: max-content;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.admin-poster{
+  background-image: linear-gradient(rgba(0, 0, 0, 0.527),rgba(0, 0, 0, 0.5)), url(https://www.unacolombianaencalifornia.com/wp-content/uploads/2012/01/arepas-rellenas-receta-1.jpg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-color: gray;
+  position: absolute;
+  padding: 5% 5%;
+  height: 100%;
+  display: flex;
+}
+#admin-login h4{
+  text-align: center;
+}
+#admin-panel div.col-md-6{
+  margin: 3% 0;
+}
+.panel-button{
+  width: 200px;
+  height: 200px;
+  background-color: #27a340;
+  text-align: center;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 3%;
+  border-width: 0ch;
+  text-decoration: none;
+}
+.panel-button:hover{
+  cursor: pointer;
+  background-color: #3ec95a;
+}
+.panel-icon{
+  width: 100%;
+  font-size: 6rem;
+  color: white;
+}
+.panel-text{
+  font-family: 'Jost', sans-serif;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  margin: 0 auto;
+  margin-top: auto;
+  margin-bottom: 4%;
+}
+.admin-table{
+  padding: 0 5%;
+}
+.table-button-container{
+  margin: 20px 0;
+}
+.back-button{
+  padding: 5% 5% 20px;
+}
+.back-button a{
+  color: black;
+  text-decoration: none;
+  font-size: 30px;
+}
+.back-button a:hover{
+  color: grey;
+}
+@media (max-width: 1200px){
+  #admin-panel{
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px){
+  .admin-poster{
+    position: static;
+    height: max-content;
+  }
+}

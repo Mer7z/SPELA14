@@ -1,3 +1,6 @@
+html{
+    height: 100%;
+}
 #sign-in, #account-page{
     padding: 3% 5%;
 }
@@ -49,6 +52,7 @@
 .log-out-container{
     width: max-content;
 }
+
 
 @media (max-width: 992px){
     .log-in-page{

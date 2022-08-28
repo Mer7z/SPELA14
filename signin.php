@@ -1,34 +1,47 @@
 <?php
 require 'conexion.php';
 session_start();
-if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+if(isset($_COOKIE['userEmail']) && isset($_COOKIE['token']) && isset($_COOKIE['id'])){
   $cookie = $_COOKIE['userEmail'];
-  $pw = $_COOKIE['pw'];
+  $hash = $_COOKIE['token'];
   $cookie_id = $_COOKIE['id'];
   
-  $_SESSION['useremail'] = $_COOKIE['userEmail'];
-  $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
-  $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+  
+  $sql_client = "SELECT contraseña FROM clientes WHERE correo='$cookie' AND id='$cookie_id'";
+  $sql_employee = "SELECT contraseña FROM empleados WHERE correo='$cookie' AND id='$cookie_id'";
   $query = $mysqli->query($sql_client);
   $result = $query->fetch_assoc();
   if($result>0){
-    $_SESSION['userType'] = 'client';
+    if($result['contraseña']==$hash){
+      $_SESSION['userType'] = 'client';
+      $_SESSION['useremail'] = $_COOKIE['userEmail'];
+      $_SESSION['verified'] = true;
+    } else{
+      session_destroy();
+    }
   } else{
     $query = $mysqli->query($sql_employee);
     $result = $query->fetch_assoc();
     if($result>0){
-      $_SESSION['userType'] = 'employee';
+      if($result['contraseña']==$hash){
+        $_SESSION['userType'] = 'client';
+        $_SESSION['useremail'] = $_COOKIE['userEmail'];
+        $_SESSION['verified'] = true;
+      } else{
+        session_destroy();
+      }
     } else{
       session_destroy();
     }
   }
 
-  setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
-  setcookie('pw', $pw, time() + (86400 * 30), "/");
-  setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  
 }
-if (isset($_SESSION['useremail'])) {
+if (isset($_SESSION['useremail']) && isset($_SESSION['verified'])) {
   #Iniciar Sección
+  setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+  setcookie('token', $hash, time() + (86400 * 30), "/");
+  setcookie('id', $cookie_id, time() + (86400 * 30), "/");
   header("location: index.php");
 }
 $email = '';
@@ -52,7 +65,7 @@ endif;
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arepahamburger La 14</title>
+  <title>Iniciar Sección | Arepahamburger La 14</title>
   <link rel="shortcut icon" href="images/arepa.png" type="image/x-icon" />
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -140,16 +153,18 @@ endif;
               </div>
               <div>
                 <?php
-                if (!isset($_SESSION['useremail'])) {
+                if (!isset($_SESSION['useremail']) && !isset($_SESSION['verified'])) {
                   if ($userType == 'client') {
                     $result = $mysqli->query($sql_client);
-                    if ($result != null) {
+                    if ($result) {
                       $row = $result->fetch_assoc();
                       if(isset($row['correo'])){
-                      if ($row['contraseña'] == $password) {
+                      if (password_verify($password, $row['contraseña'])) {
                         $_SESSION['useremail']= $email;
                         $_SESSION['userType'] = $userType;
-                          $sql = "SELECT id FROM clientes WHERE correo='$email'";
+                        $_SESSION['verified'] = true;
+                        $hash = $row['contraseña'];
+                          $sql = "SELECT id FROM clientes WHERE correo='$email' AND contraseña='$hash'";
                           $query = $mysqli->query($sql);
                           $result = $query->fetch_assoc();
                           $id = '';
@@ -157,7 +172,7 @@ endif;
                             $id = $result['id'];
                           }
                           setcookie('userEmail', $email, time() + (86400 * 30), "/");
-                          setcookie('pw', $password, time() + (86400 * 30), "/");
+                          setcookie('token', $hash, time() + (86400 * 30), "/");
                           setcookie('id', $id, time() + (86400 * 30), "/");
                         
                         header("location: index.php");
@@ -172,14 +187,16 @@ endif;
                     }
                   } elseif ($userType == 'employee') {
                     $result = $mysqli->query($sql_employee);
-                    if ($result != null) {
+                    if ($result) {
                       $row = $result->fetch_assoc();
                       if(isset($row['correo'])){
-                      if ($row['contraseña'] == $password) {
+                      if (password_verify($password, $row['contraseña'])) {
                         #Iniciar Sección
                         $_SESSION['useremail']= $email;
                         $_SESSION['userType'] = $userType;
-                          $sql = "SELECT id FROM empleados WHERE correo='$email'";
+                        $_SESSION['verified'] = true;
+                        $hash = $row['contraseña'];
+                          $sql = "SELECT id FROM empleados WHERE correo='$email' AND contraseña='$hash'";
                           $query = $mysqli->query($sql);
                           $result = $query->fetch_assoc();
                           $id = '';
@@ -191,7 +208,7 @@ endif;
                             time() + (86400 * 30),
                             "/"
                           );
-                          setcookie('pw', $password, time() + (86400 * 30), "/");
+                          setcookie('token', $hash, time() + (86400 * 30), "/");
                           setcookie('id', $id, time() + (86400 * 30), "/");
                         header("location: index.php");
                       } else {

@@ -7,6 +7,9 @@ body{
 }
 
 /* Navigation Bar */
+#nav{
+  width: 100%;
+}
 .navbar{
   padding-bottom: 0;
 }
@@ -178,6 +181,12 @@ h3{
   font-weight:lighter;
   color: #ababab;
 }
+.copyright a{
+  color: #ababab; 
+}
+.copyright a:hover{
+  color: #c7c5c5;
+}
 .hidden{
   display: none;
 }
@@ -327,6 +336,9 @@ h3{
     background-color: #2b2b2b;
     position: relative;
     z-index: 3;
+  }
+  .logo-container{
+    padding-top: 3px;
   }
   .title-text{
     color: white;

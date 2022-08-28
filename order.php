@@ -8,33 +8,47 @@
   $address = '';
   $phone = '';
   $id = '';
-  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['pw']) && isset($_COOKIE['id'])){
+  if(isset($_COOKIE['userEmail']) && isset($_COOKIE['token']) && isset($_COOKIE['id'])){
     $cookie = $_COOKIE['userEmail'];
-    $pw = $_COOKIE['pw'];
+    $hash = $_COOKIE['token'];
     $cookie_id = $_COOKIE['id'];
     
-    $_SESSION['useremail'] = $_COOKIE['userEmail'];
-    $sql_client = "SELECT tipo FROM clientes WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
-    $sql_employee = "SELECT tipo FROM empleados WHERE correo='$cookie' AND contraseña='$pw' AND id='$cookie_id'";
+    
+    $sql_client = "SELECT contraseña FROM clientes WHERE correo='$cookie' AND id='$cookie_id'";
+    $sql_employee = "SELECT contraseña FROM empleados WHERE correo='$cookie' AND id='$cookie_id'";
     $query = $mysqli->query($sql_client);
     $result = $query->fetch_assoc();
     if($result>0){
-      $_SESSION['userType'] = 'client';
+      if($result['contraseña']==$hash){
+        $_SESSION['userType'] = 'client';
+        $_SESSION['useremail'] = $_COOKIE['userEmail'];
+        $_SESSION['verified'] = true;
+      } else{
+        session_destroy();
+      }
     } else{
       $query = $mysqli->query($sql_employee);
       $result = $query->fetch_assoc();
       if($result>0){
-        $_SESSION['userType'] = 'employee';
+        if($result['contraseña']==$hash){
+          $_SESSION['userType'] = 'client';
+          $_SESSION['useremail'] = $_COOKIE['userEmail'];
+          $_SESSION['verified'] = true;
+        } else{
+          session_destroy();
+        }
       } else{
         session_destroy();
       }
     }
-
-    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
-    setcookie('pw', $pw, time() + (86400 * 30), "/");
-    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
+  
+    
   }
-  if(isset($_SESSION['useremail'])){
+  if (isset($_SESSION['useremail']) && isset($_SESSION['verified'])) {
+    #Iniciar Sección
+    setcookie('userEmail', $cookie, time() + (86400 * 30), "/");
+    setcookie('token', $hash, time() + (86400 * 30), "/");
+    setcookie('id', $cookie_id, time() + (86400 * 30), "/");
     $email = $_SESSION['useremail'];
     $logged = true;
     if(isset($_COOKIE['noreg-id'])){
@@ -204,7 +218,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arepahamburger La 14</title>
+  <title>Pedir | Arepahamburger La 14</title>
   <link rel="shortcut icon" href="images/arepa.png" type="image/x-icon">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -364,8 +378,8 @@
     </div>
     <?php
     if(!$logged):
-    echo
-      '<div class="select-menu-container">
+    ?>
+      <div class="select-menu-container">
       <p class="select-menu-text">Dónde quiere entregar su pedido:<br><span>(Solo pedidos a Caicedonia)</span></p>
       <div class="menu-container">
         <div class="person-info">
@@ -405,28 +419,28 @@
           <button type="submit" name="orderSubmit" class="order-button-product btn" id="order-page-submit">Solicitar Pedido</button>
         </div>
       </div>
-    </div>';
-
+    </div>
+    <?php
     elseif ($logged && $_SESSION['userType'] == 'client'):
-      echo
-      '<div class="select-menu-container">
+    ?>
+      <div class="select-menu-container">
       <p class="select-menu-text">Tus Datos:<br><span>(Solo pedidos a Caicedonia)</span></p>
       <div class="menu-container">
         <div class="person-info">
           <div class="input-container names-input row">
             <div class="input-flex name-input-container col-md-6">
               <span>Nombre:</span>
-              <h4>' . $name . '</h4>
+              <h4><?php echo $name ?></h4>
             </div>
             <div class="input-flex lname-input-container col-md-6">
               <span>Apellidos:</span>
-              <h4>' . $lname . '</h4>
+              <h4><?php echo $lname ?></h4>
             </div>
           </div>
           <div class="input-container">
             <div class="input-flex">
               <span>Dirección:</span>
-              <h4>' . $address . '</h4>
+              <h4><?php echo $address ?></h4>
             </div>
           </div>
           <div class="input-container">
@@ -434,7 +448,7 @@
               <span>Número de Teléfono:</span>
               <div class="telephone-container">
                 <h5>+57</h5>
-                <h5>' . $phone . '</h5>
+                <h5><?php echo $phone ?></h5>
               </div>
             </div>
           </div>
@@ -444,8 +458,8 @@
           <button type="submit" name="orderSubmit" class="order-button-product btn" id="order-page-submit">Solicitar Pedido</button>
         </div>
       </div>
-    </div>';
-
+    </div>
+    <?php
     endif;
     ?>
     </form>
@@ -475,7 +489,7 @@
         </div>
         <div class="copyright">
           <i class="fa-solid fa-copyright"></i>
-          <span>Manuel Esteban Ramírez Umaña - 2022</span>
+          <span>Manuel Esteban Ramírez Umaña - 2022<br>Logo by <a href="https://www.flaticon.com" target="_blank">Flaticon</a></span>
         </div>
       </div>
     </div>

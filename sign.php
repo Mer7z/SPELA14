@@ -15,11 +15,13 @@ $result = $con->fetch_assoc();
 if ($result > 0) {
   header("location: signin.php?email-taken=true");
 } else {
-  $sql = "INSERT INTO clientes (nombre, apellido, correo, contraseña, direccion, telefono) VALUES ('$nombre', '$lnombre', '$email', '$password', '$direccion', '$telefono')";
+  $hash = password_hash($password, PASSWORD_DEFAULT);
+  $sql = "INSERT INTO clientes (nombre, apellido, correo, contraseña, direccion, telefono) VALUES ('$nombre', '$lnombre', '$email', '$hash', '$direccion', '$telefono')";
   $con = $mysqli->query($sql);
     if ($mysqli) {
       $_SESSION['useremail'] = $email;
       $_SESSION['userType'] = 'client';
+      $_SESSION['verified'] = true;
       $sql = "SELECT id FROM clientes WHERE correo='$email'";
       $query = $mysqli->query($sql);
       $result = $query->fetch_assoc();
@@ -28,7 +30,7 @@ if ($result > 0) {
         $id = $result['id'];
       }
       setcookie('userEmail', $email, time() + (86400 * 30), "/");
-      setcookie('pw', $password, time() + (86400 * 30), "/");
+      setcookie('token', $hash, time() + (86400 * 30), "/");
       setcookie('id', $id, time() + (86400 * 30), "/");
       header("location: account.php");
     } else {
