@@ -95,26 +95,40 @@ if (isset($_SESSION['useremail']) && isset($_SESSION['verified'])) {
   $resultOrders = $query->fetch_all();
 }
 
-if (isset($_POST['productSend'])) {
-  $productId = $_POST['productId'];
-  $clientIdNoReg = $_POST['clientIdNoReg'];
-  $clientIdReg = $_POST['clientIdReg'];
-  $sql = "UPDATE pedidos SET enviado=1 WHERE id_pedidos=$productId";
+if (isset($_POST['sendOrder'])) {
+  $orderId = $_POST['orderId'];
+  $sqlGetClient = "SELECT id_no_reg, id_cliente FROM pedidos WHERE id_pedidos='$orderId[0]'";
+  $query = $mysqli->query($sqlGetClient);
+  $result = $query->fetch_assoc();
+  if($result>0){
+    if($result['id_no_reg'] != null){
+      $clientIdNoReg = $result['id_no_reg'];
+    } elseif($result['id_cliente'] != null){
+      $clientIdReg = $result['id_cliente'];
+    }
+  }
+  
   $sqlClientNoReg = "UPDATE clientes_no_registrados SET ordenado=0 WHERE id=$clientIdNoReg";
   $sqlClientReg = "UPDATE clientes SET ordenado=0 WHERE id=$clientIdReg";
 
   $queryClient;
-  if ($clientIdNoReg) {
+  if (isset($clientIdNoReg)) {
     $queryClient = $mysqli->query($sqlClientNoReg);
-  } elseif ($clientIdReg) {
+  } elseif (isset($clientIdReg)) {
     $queryClient = $mysqli->query($sqlClientReg);
   } else {
     header('location: orders.php');
   }
 
   if ($queryClient) {
-    $query = $mysqli->query($sql);
-    if ($query) {
+    foreach($orderId as $id){
+      $sql = "UPDATE pedidos SET enviado=1 WHERE id_pedidos=$id";
+      $query = $mysqli->query($sql);
+      if($query){
+        $updated = true;
+      }
+    }
+    if ($updated) {
       header('location: orders.php');
     }
   } else {
@@ -237,6 +251,7 @@ if (isset($_POST['productSend'])) {
             $endTr = false;
             $newTr = true;
             $group = true;
+            $productsId = [];
             $productsCant = [];
             $productsNames = [];
             $productsInfo = [];
@@ -247,6 +262,7 @@ if (isset($_POST['productSend'])) {
             $clientid;
             $sent;
             foreach($resultOrders as $rKey => $orders){
+                $pedidoId;
                 $productoNombre;
                 $productoInfo;
                 $cant;
@@ -258,6 +274,8 @@ if (isset($_POST['productSend'])) {
                 $idCliente;
                 foreach($orders as $key => $data){
                   switch($key){
+                    case 0:
+                      $pedidoId = $data;
                     case 1:
                       $productoNombre = $data;
                       break;
@@ -305,6 +323,7 @@ if (isset($_POST['productSend'])) {
                   $lastId = $idCliente;
                   $lastFecha = $fecha;
 
+                  array_push($productsId, $pedidoId);
                   array_push($productsNames, $productoNombre);
                   array_push($productsCant, $cant);
                   array_push($productsInfo, $productoInfo);
@@ -318,6 +337,7 @@ if (isset($_POST['productSend'])) {
                   $group = true;
                 } else {
                   if($lastId == $idCliente && $lastFecha == $fecha){
+                    $productsId[] = $pedidoId;
                     $productsCant[] = $cant;
                     $productsNames[] = $productoNombre;
                     $productsInfo[] = $productoInfo;
@@ -407,12 +427,30 @@ if (isset($_POST['productSend'])) {
             if ($logged && $_SESSION['userType'] == 'employee' ) {
             ?>
             <td>
-              Checkbox
+              <form id="send-order-form" method="POST">
+                <?php
+                foreach($productsId as $id){
+                ?>
+                <input type="hidden" name="orderId[]" value="<?php echo $id ?>">
+                <?php
+                }
+
+                $sqlSent = "SELECT enviado FROM pedidos WHERE id_pedidos='$productsId[0]'";
+                $query = $mysqli->query($sqlSent);
+                $result = $query->fetch_assoc();
+                if($result>0){
+                ?>
+                <input type="checkbox" name="sendOrder" onclick="$('#send-order-form').submit()" <?php if($result['enviado'] == 1){ echo 'checked'; } ?>>
+                <?php
+                }
+                ?>
+              </form>
             </td>
             <?php } ?>
           <?php
             if($endTr):
               $newTr = true;
+              $productsId = [$pedidoId];
               $productsNames = [$productoNombre];
               $productsCant = [$cant];
               $productsInfo = [$productoInfo];

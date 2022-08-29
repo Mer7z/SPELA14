@@ -1,6 +1,18 @@
 body{
   
 }
+.close-admin{
+  width: max-content;
+  margin-left: auto;
+  margin-right: 2%;
+}
+#exit-admin-btn{
+  border: none;
+  padding: 0;
+  background: none;
+  color: white;
+  font-size: 2rem;
+}
 #admin-panel{
   background-color: white;
   width: 50%;
@@ -26,7 +38,6 @@ body{
   position: absolute;
   padding: 5% 5%;
   height: 100%;
-  display: flex;
 }
 #admin-login h4{
   text-align: center;

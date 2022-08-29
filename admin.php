@@ -165,8 +165,19 @@ if (isset($_SESSION['adminEmail']) && isset($_SESSION['verified']) && isset($_SE
   ?>
     <?php
     if (!isset($_GET['panel'])) :
+      if(isset($_POST['exitAdmin'])){
+        session_destroy();
+        header('location: index.php');
+      }
     ?>
       <div class="container-fluid admin-poster">
+        <div class="close-admin">
+          <form method="POST">
+            <button title="Cerrar Sección Admin" id="exit-admin-btn" type="submit" name="exitAdmin">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </form>
+        </div>
         <div id="admin-panel" class="row">
           <div class="col-md-6">
             <a href="?panel=clients" class="panel-button">
@@ -859,9 +870,9 @@ if (isset($_SESSION['adminEmail']) && isset($_SESSION['verified']) && isset($_SE
                       $correo = $mysqli->escape_string($_POST['email']);
                       $pw = $mysqli->escape_string($_POST['password1']);
 
-                      $hash = password_hash($pw, PASSWORD_DEFAULT);
+                      // $hash = password_hash($pw, PASSWORD_DEFAULT);
 
-                      $sql = "UPDATE administradores SET nombre='$nombre', correo='$correo', contraseña='$hash' WHERE id='$id'";
+                      $sql = "UPDATE administradores SET nombre='$nombre', correo='$correo', contraseña='$pw' WHERE id='$id'";
                       $query = $mysqli->query($sql);
                       if ($query) {
                         header('location: admin.php?panel=admins');
@@ -949,9 +960,9 @@ if (isset($_SESSION['adminEmail']) && isset($_SESSION['verified']) && isset($_SE
                         $nombre = $mysqli->escape_string($_POST['name']);
                         $correo = $mysqli->escape_string($_POST['email']);
                         $pw = $mysqli->escape_string($_POST['password1']);
-                        $hash = password_hash($pw, PASSWORD_DEFAULT);
+                        // $hash = password_hash($pw, PASSWORD_DEFAULT);
 
-                        $sql = "INSERT INTO administradores (nombre, correo, contraseña) VALUES ('$nombre', '$correo', '$hash')";
+                        $sql = "INSERT INTO administradores (nombre, correo, contraseña) VALUES ('$nombre', '$correo', '$pw')";
                         $query = $mysqli->query($sql);
                         if ($query) {
                           header('location: admin.php?panel=admins');
