@@ -136,7 +136,7 @@
               ?>
             </a>
             <a href="#" class="nav-link">Comentar</a>
-            <a href="clients.php" class="nav-link <?php if(!$logged || $logged && $_SESSION['userType'] != 'employee'){ echo "hidden"; } ?>">Clientes</a>
+            
           </div>
         </div>
       </div>
@@ -148,7 +148,15 @@
       <h2>AREPAS DE QUESO Y MÁS</h2>
       <h3>¡Ven a disfrutar de las más ricas arepas de queso y mucho más en Caicedonia!</h3>
       <p>Pide ahora o llámanos al 318 000 0000</p>
-      <a href="order.php" class="order-button-title btn btn-lg">Pedir</a>
+      <div class="btn-title d-flex">
+        <div>
+          <a href="order.php" class="order-button-title btn btn-lg">Pedir</a>
+        </div>
+        <div>
+          <a href="signin.php" class="log-in-title-btn btn btn-lg">Iniciar Sección</a>
+        </div>
+      </div>
+      
     </div>
     <div class="products-about text-center">
       <h3>Antojate de la ricas arepas y demás productos de calidad <strong>¡Con 30 años de experiencia!</strong></h3>

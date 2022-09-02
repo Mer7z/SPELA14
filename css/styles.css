@@ -138,6 +138,23 @@ h3{
 .order-text-product{
   font-size: 1.6rem;
 }
+.btn-title{
+  margin-top: 3%;
+  justify-content: center;
+}
+.btn-title div{
+  margin: 0 3%;
+}
+.log-in-title-btn{
+  font-weight: bold;
+  color: white;
+  background-color: orangered;
+  padding: 5px 20px;
+  border: 2px solid orangered;
+}
+.log-in-title-btn:hover{
+  border-color: white;
+}
 .order-button-product, .order-button-title{
   background-color: orangered;
   color: white;
@@ -384,7 +401,12 @@ h3{
   .order-title-container{
     text-align: center;
   }
-
+  .btn-title{
+    flex-direction: column !important;
+  }
+  .btn-title div{
+    margin: 10px 0;
+  }
   .product-info{
     width: 50%;
   }

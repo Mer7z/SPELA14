@@ -49,7 +49,7 @@ if (isset($_SESSION['useremail']) && isset($_SESSION['verified'])) {
   setcookie('token', $hash, time() + (86400 * 30), "/");
   setcookie('id', $cookie_id, time() + (86400 * 30), "/");
   setcookie('type', $type, time() + (86400 * 30), "/");
-  header("location: index.php");
+  header("location: account.php");
 }
 $email = '';
 $password = '';
