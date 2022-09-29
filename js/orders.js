@@ -9,6 +9,7 @@ $(document).ready( function () {
     }
   );
   var lastRefresh
+  var notification = new Audio('audio/notification.mp3')
   refreshTable()
 
   
@@ -46,7 +47,6 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
 
   function refreshTable(){
     showOrders().then(function () {
-      console.log('refreshing...');
       setTimeout(refreshTable, 5000)
     })
   }
@@ -56,12 +56,22 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
       function (data) {
         let orders = data
         let rows = groupOrders(orders)
-        console.log(rows)
         let rowsData = [];
         rows.forEach(row => {
-          let productos = ''
-          let cant = ''
-          let info = ''
+          let productos = 
+          `<table>
+            <tbody>
+          `
+          let cant = 
+          `<table>
+            <tbody>
+          `
+          let info = 
+          `<table>
+            <tbody>
+          `
+          let productId = ''
+
           row.forEach((element, index) => {
             let infoArr = Object.entries(element.info)
             let infoTemplate = ''
@@ -69,16 +79,29 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
               if(info[1])
               infoTemplate += info[0] + ' '
             })
-            productos += element.producto
-            cant += element.cantidad
-            info += infoTemplate
-            if(index !== row.length-1){
-              productos += '<hr>'
-              cant += '<hr>'
-              info += '<hr>'
+            productos += `<tr><td>${element.producto}</td></tr>`
+            cant += `<tr><td>${element.cantidad}</td></tr>`
+            info += `<tr><td>${infoTemplate}</td></tr>`
+            productId += `<input type="hidden" name=orderId[] value=${element.id}>`
+            if(index === row.length-1){
+              productos += 
+              ` </tbody>
+              </table>`
+              cant += 
+              ` </tbody>
+              </table>`
+              info += 
+              ` </tbody>
+              </table>`
             }
           });
-          rowsData.push([row[0].direccion, row[0].nombre + ' ' + row[0].apellido, productos, cant, info, row[0].telefono, row[0].fecha, row[0].enviado])
+          let enviado
+          if(row[0].enviado === '1'){
+            enviado = '<input type="checkbox" name="sendOrder" checked>'
+          } else{
+            enviado = '<input type="checkbox" name="sendOrder">'
+          }
+          rowsData.push([row[0].direccion, row[0].nombre + ' ' + row[0].apellido, productos, cant, info, row[0].telefono, row[0].fecha, '<form class="send-order-form">'+enviado + productId+'</form>'])
         });
 
         if(!lastRefresh){
@@ -88,14 +111,13 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
           table.draw()
         }
         if(lastRefresh.equals(rowsData)){
-          console.log('no Chages')
           return
         } else{
           lastRefresh = rowsData
           table.clear()
           table.rows.add(rowsData)
           table.draw()
-          console.log('chaged')
+          notification.play()
         }
         
       },
