@@ -744,6 +744,13 @@ if (isset($_SESSION['adminEmail']) && isset($_SESSION['verified']) && isset($_SE
 
               <?php
             elseif ($_GET['panel'] == 'orders') :
+              if(isset($_POST['delete-order'])){
+                $orderId = $_POST['orderID'];
+                $sql = "DELETE FROM pedidos WHERE id_pedidos='$orderId'";
+                $query = $mysqli->query($sql);
+              }
+
+
               $sql = "SELECT * FROM pedidos";
               $query = $mysqli->query($sql);
               $results = $query->fetch_all();
@@ -844,7 +851,10 @@ if (isset($_SESSION['adminEmail']) && isset($_SESSION['verified']) && isset($_SE
                               </td>
                               <td><?php echo $pedidoFecha ?></td>
                               <td>
-                                <a href="" class="btn btn-danger">Borrar</a>
+                                <form method="post">
+                                  <input type="hidden" value="<?php echo $pedidoId ?>" name="orderID" >
+                                  <input type="submit" name="delete-order" value="Borrar" class="btn btn-danger">
+                                </form>
                               </td>
                             </tr>
                         <?php

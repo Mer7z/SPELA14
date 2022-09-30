@@ -45,10 +45,9 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
 
 
 
-  function refreshTable(){
-    showOrders().then(function () {
-      setTimeout(refreshTable, 5000)
-    })
+  async function refreshTable(){
+    const show = await showOrders()
+    setTimeout(refreshTable, 5000)
   }
 
   async function showOrders(){
@@ -71,6 +70,7 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
             <tbody>
           `
           let productId = ''
+          let clientId = ''
 
           row.forEach((element, index) => {
             let infoArr = Object.entries(element.info)
@@ -83,6 +83,7 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
             cant += `<tr><td>${element.cantidad}</td></tr>`
             info += `<tr><td>${infoTemplate}</td></tr>`
             productId += `<input type="hidden" name=orderId[] value=${element.id}>`
+            clientId = element.idCliente ? `<input type="hidden" name=clientId value=${element.idCliente}>` : `<input type="hidden" name=clientIdNoReg value=${element.idNoReg}>`
             if(index === row.length-1){
               productos += 
               ` </tbody>
@@ -97,12 +98,13 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
           });
           let enviado
           if(row[0].enviado === '1'){
-            enviado = '<input type="checkbox" name="sendOrder" checked>'
+            enviado = '<input type="checkbox" name="sendOrder" checked="checked">'
           } else{
             enviado = '<input type="checkbox" name="sendOrder">'
           }
-          rowsData.push([row[0].direccion, row[0].nombre + ' ' + row[0].apellido, productos, cant, info, row[0].telefono, row[0].fecha, '<form class="send-order-form">'+enviado + productId+'</form>'])
+          rowsData.push([row[0].direccion, row[0].nombre + ' ' + row[0].apellido, productos, cant, info, row[0].telefono, row[0].fecha, '<form class="send-order-form">'+enviado + productId+ clientId +'</form>'])
         });
+        
 
         if(!lastRefresh){
           lastRefresh = rowsData
@@ -111,7 +113,7 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
           table.draw()
         }
         if(lastRefresh.equals(rowsData)){
-          return
+
         } else{
           lastRefresh = rowsData
           table.clear()
@@ -119,11 +121,50 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
           table.draw()
           notification.play()
         }
-        
+
+        $('.send-order-form').submit(function (e){
+          e.preventDefault()
+          let target = e.target;
+          let inputs = target.children;
+          let orderIds = [];
+          let clientId;
+          let clientIdNoReg;
+          for(let input of inputs){
+            if($(input).attr('name') === "orderId[]"){
+              orderIds.push($(input).val());
+            }
+            if($(input).attr('name') === "clientId"){
+              clientId = $(input).val();
+            } else if($(input).attr('name') === "clientIdNoReg"){
+              clientIdNoReg = $(input).val();
+            }
+          }
+          let data = {
+            sendOrder: true,
+            orderId: orderIds,
+            clientId: clientId ? clientId : undefined,
+            clientIdNoReg: clientIdNoReg ? clientIdNoReg : undefined
+          }
+          console.log(data);
+          $.post("send-orders.php", data, function (res){
+            console.log('res', res);
+          })
+        })
+
+        $('.send-order-form input[type=checkbox]').click(function (e){
+          let target = e.target
+          e.preventDefault();
+          if($(target).attr('checked') !== "checked"){
+            $(target).attr('checked', '');
+            let form = $(target).parent();
+            form.submit();
+          }
+        })
       },
       "json"
     );
   }
+  
 
   function groupOrders(orders){
     let rows = [];
