@@ -129,7 +129,6 @@ endif;
               }
               ?>
             </a>
-            <a href="#" class="nav-link">Comentar</a>
           </div>
         </div>
       </div>
@@ -244,8 +243,7 @@ endif;
         <div class="sign-up-page">
           <h2>Registrarse</h2>
           <p class="sign-up-text">
-            Registrate para no tener que escribir tu dirección cada vez hagas un pedido y
-            comentar que te a parecido tu experiencia.
+            Registrate para no tener que escribir tu dirección cada vez hagas un pedido.
           </p>
           <div class="sign-up-form">
             <form action="sign.php" method="post">

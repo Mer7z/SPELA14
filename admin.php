@@ -106,7 +106,6 @@ if (isset($_SESSION['adminEmail']) && isset($_SESSION['verified']) && isset($_SE
                 }
                 ?>
               </a>
-              <a href="#" class="nav-link">Comentar</a>
               <a href="clients.php" class="nav-link <?php if (!$logged || $logged && $_SESSION['userType'] != 'employee') {
                                                       echo "hidden";
                                                     } ?>">Clientes</a>

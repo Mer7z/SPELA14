@@ -135,7 +135,6 @@
                 }
               ?>
             </a>
-            <a href="#" class="nav-link">Comentar</a>
             
           </div>
         </div>

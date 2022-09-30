@@ -159,7 +159,6 @@ if (isset($_SESSION['useremail']) && isset($_SESSION['verified'])) {
               }
               ?>
             </a>
-            <a href="#" class="nav-link">Comentar</a>
             
           </div>
         </div>

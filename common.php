@@ -55,7 +55,6 @@
               <div class="d-flex flex-row nav-links-container">
                 <a href="index.php" class="nav-link">Inicio</a>
                 <a href="order.php" class="nav-link">Pedir</a>
-                <a href="#" class="nav-link">Comentar</a>
               </div>
             </div>
           </div>
